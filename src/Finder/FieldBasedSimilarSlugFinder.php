@@ -196,7 +196,7 @@ final class FieldBasedSimilarSlugFinder extends DefaultSimilarSlugFinder
 	 */
 	private function getTypeOption(): string
 	{
-		return (string) $this->getOption(self::TYPE_INNER);
+		return (string) $this->getOption(self::OPTION_TYPE);
 	}
 
 	/**
