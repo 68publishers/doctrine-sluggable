@@ -87,7 +87,7 @@ final class FieldBasedSimilarSlugFinder extends DefaultSimilarSlugFinder
 					unset($persisted[$value]);
 				}
 
-				return array_merge(...array_values($persisted));
+				return empty($persisted) ? [] : array_merge(...array_values($persisted));
 		}
 
 		return [];
