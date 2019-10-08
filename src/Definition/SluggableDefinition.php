@@ -111,7 +111,7 @@ final class SluggableDefinition
 
 		$this->strategy->doInsert($this, $adapter);
 
-		$this->locks['update'] = FALSE;
+		$this->locks['insert'] = FALSE;
 	}
 
 	/**
