@@ -216,6 +216,10 @@ final class FieldBasedSimilarSlugFinder extends DefaultSimilarSlugFinder
 			return implode('__', (array) $associatedAdapter->getIdentifier(FALSE));
 		}
 
+		if ($fieldValue instanceof \DateTimeInterface) {
+			$fieldValue = $fieldValue->format(\DateTimeInterface::ATOM);
+		}
+
 		return (string) $fieldValue;
 	}
 }

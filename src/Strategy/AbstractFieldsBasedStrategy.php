@@ -17,7 +17,7 @@ abstract class AbstractFieldsBasedStrategy extends SixtyEightPublishers\Doctrine
 	public const    OPTION_FIELDS = 'fields',
 					OPTION_DATETIME_FORMAT = 'datetimeFormat';
 
-	public const    DEFAULT_DATETIME_FORMAT = \DateTime::ATOM;
+	public const    DEFAULT_DATETIME_FORMAT = \DateTimeInterface::ATOM;
 
 	/** @var array  */
 	protected $defaults = [
@@ -67,7 +67,7 @@ abstract class AbstractFieldsBasedStrategy extends SixtyEightPublishers\Doctrine
 		$values = array_map(static function ($field) use ($adapter, $datetimeFormat) {
 			$value = $adapter->getValue($field);
 
-			return $value instanceof \DateTime ? $value->format($datetimeFormat) : $value;
+			return $value instanceof \DateTimeInterface ? $value->format($datetimeFormat) : $value;
 		}, $this->getFields());
 
 		$slug = $definition->getTransliterator()->transliterate($values);

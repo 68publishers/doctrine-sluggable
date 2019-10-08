@@ -45,7 +45,7 @@ final class SimilarSlugFinderProxy implements ISimilarSlugFinder
 			));
 		}
 
-		$key = $adapter->getRootEntityName() . '::' . $fieldName . '=' . $slug;
+		$key = $this->createCacheKey($adapter, $fieldName, $slug);
 
 		if (!isset($this->cache[$key])) {
 			$this->cache[$key] = $this->inner->getSimilarSlugs($adapter, $fieldName, $slug);
@@ -160,5 +160,35 @@ final class SimilarSlugFinderProxy implements ISimilarSlugFinder
 		}
 
 		return $this->inner->filterPersistedSlugs($this->persisted[$key], $adapter);
+	}
+
+	/**
+	 * @param \SixtyEightPublishers\DoctrineSluggable\EntityAdapter\IEntityAdapter $adapter
+	 * @param string                                                               $fieldName
+	 * @param string                                                               $slug
+	 *
+	 * @return string
+	 */
+	private function createCacheKey(SixtyEightPublishers\DoctrineSluggable\EntityAdapter\IEntityAdapter $adapter, string $fieldName, string $slug): string
+	{
+		$metadata = $adapter->getClassMetadata();
+		$trackedFields = $this->getTrackedFields();
+		$base = $adapter->getRootEntityName() . '::' . $fieldName;
+
+		foreach ($trackedFields as $trackedField) {
+			$trackedFieldValue = $adapter->getValue($trackedField);
+
+			if (NULL !== $trackedFieldValue && $metadata->hasAssociation($trackedFieldValue) && $metadata->isSingleValuedAssociation($trackedFieldValue)) {
+				$trackedFieldValue = spl_object_hash($trackedFieldValue);
+			}
+
+			if ($trackedFieldValue instanceof \DateTimeInterface) {
+				$trackedFieldValue = $trackedFieldValue->format(\DateTimeInterface::ATOM);
+			}
+
+			$base .= '#' . $trackedFieldValue;
+		}
+
+		return $base . '=' . $slug;
 	}
 }
