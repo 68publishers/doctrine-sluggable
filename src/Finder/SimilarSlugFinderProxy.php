@@ -116,7 +116,7 @@ final class SimilarSlugFinderProxy implements ISimilarSlugFinder
 		$key = $adapter->getRootEntityName() . '::' . $fieldName;
 
 		if (!array_key_exists($key, $this->persisted)) {
-			$this->persisted[$key] = $key;
+			$this->persisted[$key] = [];
 		}
 
 		$this->inner->pushPersistedSlug(
