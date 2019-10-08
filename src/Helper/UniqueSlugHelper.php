@@ -9,44 +9,34 @@ use SixtyEightPublishers;
 
 final class UniqueSlugHelper
 {
-	/** @var \SixtyEightPublishers\DoctrineSluggable\SluggableDefinitionStorage  */
+	/** @var \SixtyEightPublishers\DoctrineSluggable\DefinitionStorage\ISluggableDefinitionStorage  */
 	private $storage;
 
 	/** @var \Doctrine\ORM\EntityManagerInterface  */
 	private $em;
 
 	/**
-	 * @param \SixtyEightPublishers\DoctrineSluggable\SluggableDefinitionStorage $storage
-	 * @param \Doctrine\ORM\EntityManagerInterface                               $em
+	 * @param \SixtyEightPublishers\DoctrineSluggable\DefinitionStorage\ISluggableDefinitionStorage $storage
+	 * @param \Doctrine\ORM\EntityManagerInterface                                                  $em
 	 */
-	public function __construct(SixtyEightPublishers\DoctrineSluggable\SluggableDefinitionStorage $storage, Doctrine\ORM\EntityManagerInterface $em)
+	public function __construct(SixtyEightPublishers\DoctrineSluggable\DefinitionStorage\ISluggableDefinitionStorage $storage, Doctrine\ORM\EntityManagerInterface $em)
 	{
 		$this->storage = $storage;
 		$this->em = $em;
 	}
 
 	/**
-	 * @param $object
+	 * @param object $object
 	 * @param string $fieldName
 	 * @param string $slug
 	 *
 	 * @return bool
-	 * @throws \Doctrine\ORM\Mapping\MappingException
-	 * @throws \ReflectionException
 	 */
 	public function isSlugUnique($object, string $fieldName, string $slug): bool
 	{
-		foreach ($this->storage->getSluggableDefinitions($this->em, $object) as $field => $definition) {
-			if ($field === $fieldName) {
-				return (new SixtyEightPublishers\DoctrineSluggable\SluggableDefinitionWrapper($definition, $this->em, $object))
-					->isUnique($slug);
-			}
-		}
+		$definition = $this->storage->getSluggableDefinition($this->em, get_class($object), $fieldName);
+		$adapter = SixtyEightPublishers\DoctrineSluggable\EntityAdapter\EntityAdapterFactory::create($this->em, $object);
 
-		throw new SixtyEightPublishers\DoctrineSluggable\Exception\InvalidStateException(sprintf(
-			'Field %s::$%s doesn\'t exists.',
-			get_class($object),
-			$fieldName
-		));
+		return $definition->getUniquer()->isUnique($slug, $adapter, $definition->getFinder());
 	}
 }

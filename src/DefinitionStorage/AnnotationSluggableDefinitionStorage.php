@@ -2,11 +2,12 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\DoctrineSluggable;
+namespace SixtyEightPublishers\DoctrineSluggable\DefinitionStorage;
 
 use Doctrine;
+use SixtyEightPublishers;
 
-final class SluggableDefinitionStorage
+final class AnnotationSluggableDefinitionStorage implements ISluggableDefinitionStorage
 {
 	/** @var \Doctrine\Common\Annotations\Reader  */
 	private $reader;
@@ -23,16 +24,14 @@ final class SluggableDefinitionStorage
 	}
 
 	/**
-	 * @param \Doctrine\ORM\EntityManagerInterface $em
-	 * @param object                               $object
+	 * {@inheritDoc}
 	 *
-	 * @return \SixtyEightPublishers\DoctrineSluggable\SluggableDefinition[]
-	 * @throws \Doctrine\ORM\Mapping\MappingException
+	 * @throws Doctrine\ORM\Mapping\MappingException
 	 * @throws \ReflectionException
 	 */
-	public function getSluggableDefinitions(Doctrine\ORM\EntityManagerInterface $em, $object): array
+	public function findSluggableDefinitions(Doctrine\ORM\EntityManagerInterface $em, string $entityClassName): array
 	{
-		$metadata = $em->getClassMetadata(get_class($object));
+		$metadata = $em->getClassMetadata($entityClassName);
 		$name = $metadata->getName() . '_sluggable_field';
 
 		if (isset($this->definitionStorage[$name])) {
@@ -58,9 +57,30 @@ final class SluggableDefinitionStorage
 	}
 
 	/**
+	 * {@inheritDoc}
+	 *
+	 * @throws Doctrine\ORM\Mapping\MappingException
+	 * @throws \ReflectionException
+	 */
+	public function getSluggableDefinition(Doctrine\ORM\EntityManagerInterface $em, string $entityClassName, string $fieldName): SixtyEightPublishers\DoctrineSluggable\Definition\SluggableDefinition
+	{
+		$definitions = $this->findSluggableDefinitions($em, $entityClassName);
+
+		if (!isset($definitions[$fieldName])) {
+			throw new SixtyEightPublishers\DoctrineSluggable\Exception\InvalidStateException(sprintf(
+				'Field %s::$%s is not Sluggable.',
+				$entityClassName,
+				$fieldName
+			));
+		}
+
+		return $definitions[$fieldName];
+	}
+
+	/**
 	 * @param \Doctrine\ORM\Mapping\ClassMetadata $metadata
 	 *
-	 * @return \SixtyEightPublishers\DoctrineSluggable\SluggableDefinition[]
+	 * @return \SixtyEightPublishers\DoctrineSluggable\Definition\SluggableDefinition[]
 	 * @throws \Doctrine\ORM\Mapping\MappingException
 	 * @throws \ReflectionException
 	 */
@@ -79,18 +99,16 @@ final class SluggableDefinitionStorage
 			}
 
 			/** @var NULL|\SixtyEightPublishers\DoctrineSluggable\Annotation\Slug $slug */
-			$slug = $this->reader->getPropertyAnnotation($reflectionClass->getProperty($fieldName), Annotation\Slug::class);
+			$slug = $this->reader->getPropertyAnnotation($reflectionClass->getProperty($fieldName), SixtyEightPublishers\DoctrineSluggable\Annotation\Slug::class);
 
 			if (NULL === $slug) {
 				continue;
 			}
 
-			$slug->validateFor($metadata);
-
 			$mapping = $metadata->getFieldMapping($fieldName);
 			$entityName = ($metadata->isInheritedField($fieldName) ? new \ReflectionClass($mapping['declared']) : $reflectionClass)->getName();
 
-			$definitions[$fieldName] = new SluggableDefinition($slug, $entityName, $fieldName);
+			$definitions[$fieldName] = $slug->createDefinition($entityName, $fieldName);
 		}
 
 		return $definitions;

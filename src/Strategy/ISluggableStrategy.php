@@ -6,21 +6,21 @@ namespace SixtyEightPublishers\DoctrineSluggable\Strategy;
 
 use SixtyEightPublishers;
 
-interface ISluggableStrategy extends SixtyEightPublishers\DoctrineSluggable\IAdjustable
+interface ISluggableStrategy
 {
 	/**
-	 * @param \SixtyEightPublishers\DoctrineSluggable\SluggableDefinitionWrapper $wrapper
-	 * @param array                                                              $options
+	 * @param \SixtyEightPublishers\DoctrineSluggable\Definition\SluggableDefinition $definition
+	 * @param \SixtyEightPublishers\DoctrineSluggable\EntityAdapter\IEntityAdapter   $adapter
 	 *
 	 * @return void
 	 */
-	public function doInsert(SixtyEightPublishers\DoctrineSluggable\SluggableDefinitionWrapper $wrapper, array $options): void;
+	public function doInsert(SixtyEightPublishers\DoctrineSluggable\Definition\SluggableDefinition $definition, SixtyEightPublishers\DoctrineSluggable\EntityAdapter\IEntityAdapter $adapter): void;
 
 	/**
-	 * @param \SixtyEightPublishers\DoctrineSluggable\SluggableDefinitionWrapper $wrapper
-	 * @param array                                                              $options
+	 * @param \SixtyEightPublishers\DoctrineSluggable\Definition\SluggableDefinition $definition
+	 * @param \SixtyEightPublishers\DoctrineSluggable\EntityAdapter\IEntityAdapter   $adapter
 	 *
 	 * @return void
 	 */
-	public function doUpdate(SixtyEightPublishers\DoctrineSluggable\SluggableDefinitionWrapper $wrapper, array $options): void;
+	public function doUpdate(SixtyEightPublishers\DoctrineSluggable\Definition\SluggableDefinition $definition, SixtyEightPublishers\DoctrineSluggable\EntityAdapter\IEntityAdapter $adapter): void;
 }

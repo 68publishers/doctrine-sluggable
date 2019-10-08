@@ -29,7 +29,8 @@ final class SluggableExtension extends Nette\DI\CompilerExtension
 		$builder = $this->getContainerBuilder();
 
 		$builder->addDefinition($this->prefix('storage'))
-			->setType(SixtyEightPublishers\DoctrineSluggable\SluggableDefinitionStorage::class);
+			->setType(SixtyEightPublishers\DoctrineSluggable\DefinitionStorage\ISluggableDefinitionStorage::class)
+			->setFactory(SixtyEightPublishers\DoctrineSluggable\DefinitionStorage\AnnotationSluggableDefinitionStorage::class);
 
 		$builder->addDefinition($this->prefix('event_subscriber'))
 			->setType(SixtyEightPublishers\DoctrineSluggable\SluggableEventSubscriber::class);
