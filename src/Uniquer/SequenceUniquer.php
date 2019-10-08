@@ -34,7 +34,7 @@ final class SequenceUniquer extends SixtyEightPublishers\DoctrineSluggable\Abstr
 		$separator = $this->getSeparator();
 		$similarSlugs = $this->getSimilarSlugs($slug, $adapter, $finder);
 
-		if (count($similarSlugs) || in_array($slug, $similarSlugs, TRUE)) {
+		if (in_array($slug, $similarSlugs, TRUE)) {
 			$i = 1;
 
 			do {
