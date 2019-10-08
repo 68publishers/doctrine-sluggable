@@ -11,13 +11,16 @@ use Doctrine;
  */
 final class SluggableEventSubscriber implements Doctrine\Common\EventSubscriber
 {
-	/** @var \SixtyEightPublishers\DoctrineSluggable\SluggableDefinitionStorage  */
+	/** @var \SixtyEightPublishers\DoctrineSluggable\DefinitionStorage\ISluggableDefinitionStorage  */
 	private $storage;
 
+	/** @var \SixtyEightPublishers\DoctrineSluggable\Definition\SluggableDefinition[]  */
+	private $definitions = [];
+
 	/**
-	 * @param \SixtyEightPublishers\DoctrineSluggable\SluggableDefinitionStorage $storage
+	 * @param \SixtyEightPublishers\DoctrineSluggable\DefinitionStorage\ISluggableDefinitionStorage $storage
 	 */
-	public function __construct(SluggableDefinitionStorage $storage)
+	public function __construct(DefinitionStorage\ISluggableDefinitionStorage $storage)
 	{
 		$this->storage = $storage;
 	}
@@ -39,8 +42,6 @@ final class SluggableEventSubscriber implements Doctrine\Common\EventSubscriber
 	 * @param \Doctrine\ORM\Event\OnFlushEventArgs $args
 	 *
 	 * @return void
-	 * @throws \Doctrine\ORM\Mapping\MappingException
-	 * @throws \ReflectionException
 	 */
 	public function onFlush(Doctrine\ORM\Event\OnFlushEventArgs $args): void
 	{
@@ -48,22 +49,24 @@ final class SluggableEventSubscriber implements Doctrine\Common\EventSubscriber
 		$uow = $em->getUnitOfWork();
 
 		foreach ($uow->getScheduledEntityInsertions() as $object) {
-			if (!count($definitions = $this->storage->getSluggableDefinitions($em, $object))) {
+			if (!count($definitions = $this->storage->findSluggableDefinitions($em, get_class($object)))) {
 				continue;
 			}
 
 			foreach ($definitions as $definition) {
-				$definition->runInsert($em, $object);
+				$this->addDefinition($definition);
+				$definition->runInsert(EntityAdapter\EntityAdapterFactory::create($em, $object));
 			}
 		}
 
 		foreach ($uow->getScheduledEntityUpdates() as $object) {
-			if (!count($definitions = $this->storage->getSluggableDefinitions($em, $object))) {
+			if (!count($definitions = $this->storage->findSluggableDefinitions($em, get_class($object)))) {
 				continue;
 			}
 
 			foreach ($definitions as $definition) {
-				$definition->runUpdate($em, $object);
+				$this->addDefinition($definition);
+				$definition->runUpdate(EntityAdapter\EntityAdapterFactory::create($em, $object));
 			}
 		}
 	}
@@ -75,6 +78,22 @@ final class SluggableEventSubscriber implements Doctrine\Common\EventSubscriber
 	 */
 	public function postFlush(): void
 	{
-		PersistedSlugStorage::flush();
+		foreach ($this->definitions as $definition) {
+			$definition->getFinder()->invalidateCache();
+		}
+
+		$this->definitions = [];
+	}
+
+	/**
+	 * @param \SixtyEightPublishers\DoctrineSluggable\Definition\SluggableDefinition $definition
+	 *
+	 * @return void
+	 */
+	private function addDefinition(Definition\SluggableDefinition $definition): void
+	{
+		if (!isset($this->definitions[$oid = spl_object_hash($definition)])) {
+			$this->definitions[$oid] = $definition;
+		}
 	}
 }

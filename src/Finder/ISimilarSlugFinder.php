@@ -4,34 +4,42 @@ declare(strict_types=1);
 
 namespace SixtyEightPublishers\DoctrineSluggable\Finder;
 
-use Doctrine;
 use SixtyEightPublishers;
 
-interface ISimilarSlugFinder extends SixtyEightPublishers\DoctrineSluggable\IAdjustable
+interface ISimilarSlugFinder
 {
 	/**
-	 * @param \Doctrine\ORM\EntityManagerInterface                        $em
-	 * @param object                                                      $object
-	 * @param string                                                      $fieldName
-	 * @param string                                                      $slug
-	 * @param \SixtyEightPublishers\DoctrineSluggable\Annotation\Option[] $options
+	 * @param \SixtyEightPublishers\DoctrineSluggable\EntityAdapter\IEntityAdapter $adapter
+	 * @param string                                                               $fieldName
+	 * @param string                                                               $slug
 	 *
 	 * @return array
 	 */
-	public function getSimilarSlugs(Doctrine\ORM\EntityManagerInterface $em, $object, string $fieldName, string $slug, array $options): array;
+	public function getSimilarSlugs(SixtyEightPublishers\DoctrineSluggable\EntityAdapter\IEntityAdapter $adapter, string $fieldName, string $slug): array;
 
 	/**
-	 * @param \SixtyEightPublishers\DoctrineSluggable\SluggableDefinitionWrapper $wrapper
-	 *
-	 * @return string
+	 * @return array
 	 */
-	public function createDefinitionKey(SixtyEightPublishers\DoctrineSluggable\SluggableDefinitionWrapper $wrapper): string;
+	public function getTrackedFields(): array;
 
 	/**
-	 * @param \SixtyEightPublishers\DoctrineSluggable\SluggableDefinitionWrapper $wrapper
-	 * @param string                                                             $key
+	 * @internal
 	 *
-	 * @return bool
+	 * @param array                                                                $persisted
+	 * @param \SixtyEightPublishers\DoctrineSluggable\EntityAdapter\IEntityAdapter $adapter
+	 * @param string                                                               $slug
+	 *
+	 * @return void
 	 */
-	public function matchDefinitionKey(SixtyEightPublishers\DoctrineSluggable\SluggableDefinitionWrapper $wrapper, string $key): bool;
+	public function pushPersistedSlug(array &$persisted, SixtyEightPublishers\DoctrineSluggable\EntityAdapter\IEntityAdapter $adapter, string $slug): void;
+
+	/**
+	 * @internal
+	 *
+	 * @param array                                                                $persisted
+	 * @param \SixtyEightPublishers\DoctrineSluggable\EntityAdapter\IEntityAdapter $adapter
+	 *
+	 * @return array
+	 */
+	public function filterPersistedSlugs(array $persisted, SixtyEightPublishers\DoctrineSluggable\EntityAdapter\IEntityAdapter $adapter): array;
 }

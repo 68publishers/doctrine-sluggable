@@ -21,7 +21,7 @@ then register `SluggableEventSubscriber` into `EventManager` like this:
 /** @var Doctrine\Common\Annotations\Reader $reader */
 
 $subscriber = new SixtyEightPublishers\DoctrineSluggable\SluggableEventSubscriber(
-	new SixtyEightPublishers\DoctrineSluggable\SluggableDefinitionStorage($reader)
+	new SixtyEightPublishers\DoctrineSluggable\DefinitionStorage\AnnotationSluggableDefinitionStorage($reader)
 );
 
 $em->getEventManager()->addEventSubscriber($subscriber);
@@ -66,14 +66,15 @@ class Product {
 	 * @Sluggable\Slug(
 	 *      strategy="SixtyEightPublishers\DoctrineSluggable\Strategy\GenerateOnInsertStrategy",
 	 *      strategyOptions={
-	 *          @Sluggable\Option(name="fields", value={"name"}),
-	 *          @Sluggable\Option(name="checkOnUpdate", value=true)
+	 *            "fields": {"name"}, 
+	 *            "checkOnUpdate": true
 	 *      },
-	 *      finder="SixtyEightPublishers\DoctrineSluggable\Finder\NegativeFieldBasedSimilarSlugFinder",
+	 *      finder="SixtyEightPublishers\DoctrineSluggable\Finder\FieldBasedSimilarSlugFinder",
 	 *      finderOptions={
-	 *          @Sluggable\Option(name="field", value="category")
+	 *            "field": "category", 
+	 *            "type": "outer"
 	 *      },
-	 *      transliterate="SixtyEightPublishers\DoctrineSluggable\Transliterate\CamelCaseSlugTransliterate"
+	 *      transliterator="SixtyEightPublishers\DoctrineSluggable\Transliterator\CamelCaseTransliterator"
 	 * )
 	 * @ORM\Column(type="string", length=255)
 	 *

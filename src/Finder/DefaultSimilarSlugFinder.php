@@ -12,9 +12,9 @@ class DefaultSimilarSlugFinder extends SixtyEightPublishers\DoctrineSluggable\Ab
 	/**
 	 * {@inheritdoc}
 	 */
-	public function getSimilarSlugs(Doctrine\ORM\EntityManagerInterface $em, $object, string $fieldName, string $slug, array $options): array
+	public function getSimilarSlugs(SixtyEightPublishers\DoctrineSluggable\EntityAdapter\IEntityAdapter $adapter, string $fieldName, string $slug): array
 	{
-		$query = $this->createQuery($em, $object, $fieldName, $slug, $options);
+		$query = $this->createQuery($adapter, $fieldName, $slug);
 
 		$result = $query->getQuery()
 			->setHydrationMode(Doctrine\ORM\Query::HYDRATE_ARRAY)
@@ -28,46 +28,54 @@ class DefaultSimilarSlugFinder extends SixtyEightPublishers\DoctrineSluggable\Ab
 	/**
 	 * {@inheritdoc}
 	 */
-	public function createDefinitionKey(SixtyEightPublishers\DoctrineSluggable\SluggableDefinitionWrapper $wrapper): string
+	public function getTrackedFields(): array
 	{
-		return $wrapper->getEntityName() . '::' . $wrapper->getFieldName();
+		return [];
 	}
 
 	/**
 	 * {@inheritdoc}
 	 */
-	public function matchDefinitionKey(SixtyEightPublishers\DoctrineSluggable\SluggableDefinitionWrapper $wrapper, string $key): bool
+	public function pushPersistedSlug(array &$persisted, SixtyEightPublishers\DoctrineSluggable\EntityAdapter\IEntityAdapter $adapter, string $slug): void
 	{
-		return $this->createDefinitionKey($wrapper) === $key;
+		$persisted[] = $slug;
 	}
 
 	/**
 	 * {@inheritdoc}
 	 */
-	public static function assertOptions(array $options, Doctrine\ORM\Mapping\ClassMetadata $metadata): void
+	public function filterPersistedSlugs(array $persisted, SixtyEightPublishers\DoctrineSluggable\EntityAdapter\IEntityAdapter $adapter): array
 	{
+		return $persisted;
 	}
 
 	/**
-	 * @param \Doctrine\ORM\EntityManagerInterface $em
-	 * @param object                               $object
-	 * @param string                               $fieldName
-	 * @param string                               $slug
-	 * @param array                                $options
+	 * @param \SixtyEightPublishers\DoctrineSluggable\EntityAdapter\IEntityAdapter $adapter
+	 * @param string                                                               $fieldName
+	 * @param string                                                               $slug
 	 *
 	 * @return \Doctrine\ORM\QueryBuilder
 	 */
-	protected function createQuery(Doctrine\ORM\EntityManagerInterface $em, $object, string $fieldName, string $slug, array $options): Doctrine\ORM\QueryBuilder
+	protected function createQuery(SixtyEightPublishers\DoctrineSluggable\EntityAdapter\IEntityAdapter $adapter, string $fieldName, string $slug): Doctrine\ORM\QueryBuilder
 	{
-		$metadata = $em->getClassMetadata(get_class($object));
-		$query = $em->createQueryBuilder();
+		$metadata = $adapter->getClassMetadata();
+		$query = $adapter->getEntityManager()->createQueryBuilder();
 
-		return $query->select('rec.'.$fieldName)
-			->from($metadata->rootEntityName, 'rec')
+		$query->select('rec.'.$fieldName)
+			->from($adapter->getRootEntityName(), 'rec')
 			->where($query->expr()->like(
 				'rec.'.$fieldName,
 				':slug'
 			))
 			->setParameter('slug', $slug.'%');
+
+		foreach ((array) $adapter->getIdentifier(FALSE) as $idField => $value) {
+			$name = str_replace('.', '_', $idField);
+
+			$query->andWhere($query->expr()->neq('rec.' . $idField, ':' . $name));
+			$query->setParameter($name, $value, $metadata->getTypeOfField($idField));
+		}
+
+		return $query;
 	}
 }

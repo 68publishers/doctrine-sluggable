@@ -4,55 +4,92 @@ declare(strict_types=1);
 
 namespace SixtyEightPublishers\DoctrineSluggable\Annotation;
 
-use Doctrine;
 use SixtyEightPublishers;
 
 /**
  * @Annotation
  * @Target("PROPERTY")
+ * @Attributes({
+ *   @Attribute("strategy", type = "string"),
+ *   @Attribute("finder", type = "string"),
+ *   @Attribute("transliterator", type = "string"),
+ *   @Attribute("uniquer", type = "string"),
+ *   @Attribute("strategyOptions", type = "array"),
+ *   @Attribute("finderOptions", type = "array"),
+ *   @Attribute("transliteratorOptions", type = "array"),
+ *   @Attribute("uniquerOptions", type = "array"),
+ * })
  */
-final class Slug extends Doctrine\Common\Annotations\Annotation
+final class Slug
 {
-	/** @var string  */
-	public $strategy = SixtyEightPublishers\DoctrineSluggable\Strategy\GenerateAlwaysStrategy::class;
-
-	/** @var array<SixtyEightPublishers\DoctrineSluggable\Annotation\Option>  */
-	public $strategyOptions = [];
-
-	/** @var string  */
-	public $finder = SixtyEightPublishers\DoctrineSluggable\Finder\DefaultSimilarSlugFinder::class;
-
-	/** @var array<SixtyEightPublishers\DoctrineSluggable\Annotation\Option>  */
-	public $finderOptions = [];
-
-	/** @var string  */
-	public $transliterate = SixtyEightPublishers\DoctrineSluggable\Transliterate\DefaultSlugTransliterate::class;
-
-	/** @var array<SixtyEightPublishers\DoctrineSluggable\Annotation\Option>  */
-	public $transliterateOptions = [];
-
-	/** @var string  */
-	public $uniquer = SixtyEightPublishers\DoctrineSluggable\Uniquer\DefaultUniquer::class;
-
-	/** @var array<SixtyEightPublishers\DoctrineSluggable\Annotation\Option>  */
-	public $uniquerOptions = [];
+	/** @var array  */
+	private $values;
 
 	/**
-	 * @param \Doctrine\ORM\Mapping\ClassMetadata $metadata
-	 *
-	 * @return void
+	 * @param array $values
 	 */
-	public function validateFor(Doctrine\ORM\Mapping\ClassMetadata $metadata): void
+	public function __construct(array $values)
 	{
-		$this->assertSubclass($this->strategy, SixtyEightPublishers\DoctrineSluggable\Strategy\ISluggableStrategy::class);
-		$this->assertSubclass($this->finder, SixtyEightPublishers\DoctrineSluggable\Finder\ISimilarSlugFinder::class);
-		$this->assertSubclass($this->transliterate, SixtyEightPublishers\DoctrineSluggable\Transliterate\ISlugTransliterate::class);
-		$this->assertSubclass($this->uniquer, SixtyEightPublishers\DoctrineSluggable\Uniquer\ISlugUniquer::class);
+		$this->values = $values;
+	}
 
-		($this->strategy . '::assertOptions')($this->strategyOptions, $metadata);
-		($this->finder . '::assertOptions')($this->finderOptions, $metadata);
-		($this->transliterate . '::assertOptions')($this->transliterateOptions, $metadata);
-		($this->uniquer . '::assertOptions')($this->finderOptions, $metadata);
+	/**
+	 * @param string $entityName
+	 * @param string $fieldName
+	 *
+	 * @return \SixtyEightPublishers\DoctrineSluggable\Definition\SluggableDefinition
+	 */
+	public function createDefinition(string $entityName, string $fieldName): SixtyEightPublishers\DoctrineSluggable\Definition\SluggableDefinition
+	{
+		return new SixtyEightPublishers\DoctrineSluggable\Definition\SluggableDefinition(
+			$this->createInstance(
+				$this->values,
+				'strategy',
+				SixtyEightPublishers\DoctrineSluggable\Strategy\ISluggableStrategy::class,
+				SixtyEightPublishers\DoctrineSluggable\Strategy\GenerateAlwaysStrategy::class
+			),
+			$this->createInstance(
+				$this->values,
+				'finder',
+				SixtyEightPublishers\DoctrineSluggable\Finder\ISimilarSlugFinder::class,
+				SixtyEightPublishers\DoctrineSluggable\Finder\DefaultSimilarSlugFinder::class
+			),
+			$this->createInstance(
+				$this->values,
+				'transliterator',
+				SixtyEightPublishers\DoctrineSluggable\Transliterator\ITransliterator::class,
+				SixtyEightPublishers\DoctrineSluggable\Transliterator\DefaultTransliterator::class
+			),
+			$this->createInstance(
+				$this->values,
+				'uniquer',
+				SixtyEightPublishers\DoctrineSluggable\Uniquer\IUniquer::class,
+				SixtyEightPublishers\DoctrineSluggable\Uniquer\NullUniquer::class
+			),
+			$entityName,
+			$fieldName
+		);
+	}
+
+	/**
+	 * @param array  $values
+	 * @param string $name
+	 * @param string $parentClass
+	 * @param string $defaultClass
+	 *
+	 * @return mixed
+	 */
+	private function createInstance(array $values, string $name, string $parentClass, string $defaultClass)
+	{
+		$class = $defaultClass;
+
+		if (isset($values[$name])) {
+			$class = $values[$name];
+
+			$this->assertSubclass($class, $parentClass);
+		}
+
+		return new $class($values[$name . 'Options'] ?? []);
 	}
 
 	/**

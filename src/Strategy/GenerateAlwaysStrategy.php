@@ -9,31 +9,35 @@ use SixtyEightPublishers;
 /**
  * $options = array(
  *      'fields' => ['array of fields'],
+ *      'datetimeFormat' => 'j.n.Y',
  * )
  */
-class GenerateAlwaysStrategy extends AbstractFieldsBasedStrategy
+final class GenerateAlwaysStrategy extends AbstractFieldsBasedStrategy
 {
 	/**
 	 * {@inheritdoc}
 	 */
-	public function doInsert(SixtyEightPublishers\DoctrineSluggable\SluggableDefinitionWrapper $wrapper, array $options): void
+	public function doInsert(SixtyEightPublishers\DoctrineSluggable\Definition\SluggableDefinition $definition, SixtyEightPublishers\DoctrineSluggable\EntityAdapter\IEntityAdapter $adapter): void
 	{
-		$wrapper->setUniqueSlugFromFields($this->getFields($options));
+		$this->setSlugFromFields($definition, $adapter);
 	}
 
 	/**
 	 * {@inheritdoc}
 	 */
-	public function doUpdate(SixtyEightPublishers\DoctrineSluggable\SluggableDefinitionWrapper $wrapper, array $options): void
+	public function doUpdate(SixtyEightPublishers\DoctrineSluggable\Definition\SluggableDefinition $definition, SixtyEightPublishers\DoctrineSluggable\EntityAdapter\IEntityAdapter $adapter): void
 	{
-		$fields = $this->getFields($options);
+		$uow = $adapter->getEntityManager()->getUnitOfWork();
+		$changes = $uow->getEntityChangeSet($adapter->getEntity());
 
-		$isChanged  = (bool) array_sum(array_map(static function (string $field) use ($wrapper): int {
-			return (int) $wrapper->isFieldChanged($field);
-		}, $fields));
+		foreach (array_merge($this->getFields(), $definition->getFinder()->getTrackedFields()) as $field) {
+			if (!isset($changes[$field]) || $changes[$field][0] === $changes[$field][1]) {
+				continue;
+			}
 
-		if ($isChanged) {
-			$wrapper->setUniqueSlugFromFields($fields);
+			$this->setSlugFromFields($definition, $adapter);
+
+			return;
 		}
 	}
 }
