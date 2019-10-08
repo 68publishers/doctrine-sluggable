@@ -142,6 +142,7 @@ final class SimilarSlugFinderProxy implements ISimilarSlugFinder
 	{
 		return [
 			'inner',
+			'fieldName',
 		];
 	}
 
