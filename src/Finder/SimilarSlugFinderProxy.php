@@ -178,7 +178,7 @@ final class SimilarSlugFinderProxy implements ISimilarSlugFinder
 		foreach ($trackedFields as $trackedField) {
 			$trackedFieldValue = $adapter->getValue($trackedField);
 
-			if (NULL !== $trackedFieldValue && $metadata->hasAssociation($trackedFieldValue) && $metadata->isSingleValuedAssociation($trackedFieldValue)) {
+			if (NULL !== $trackedFieldValue && $metadata->hasAssociation($trackedField) && $metadata->isSingleValuedAssociation($trackedField)) {
 				$trackedFieldValue = spl_object_hash($trackedFieldValue);
 			}
 
