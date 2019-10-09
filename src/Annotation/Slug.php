@@ -22,6 +22,28 @@ use SixtyEightPublishers;
  */
 final class Slug
 {
+	private const ALIASES = [
+		'strategy' => [
+			'generate-always' => SixtyEightPublishers\DoctrineSluggable\Strategy\GenerateAlwaysStrategy::class,
+			'generate-on-insert' => SixtyEightPublishers\DoctrineSluggable\Strategy\GenerateOnInsertStrategy::class,
+			'check-only' => SixtyEightPublishers\DoctrineSluggable\Strategy\CheckOnlyStrategy::class,
+		],
+		'finder' => [
+			'default' => SixtyEightPublishers\DoctrineSluggable\Finder\DefaultSimilarSlugFinder::class,
+			'field-based' => SixtyEightPublishers\DoctrineSluggable\Finder\FieldBasedSimilarSlugFinder::class,
+		],
+		'uniquer' => [
+			'' => SixtyEightPublishers\DoctrineSluggable\Uniquer\NullUniquer::class,
+			'null' => SixtyEightPublishers\DoctrineSluggable\Uniquer\NullUniquer::class,
+			'check' => SixtyEightPublishers\DoctrineSluggable\Uniquer\CheckUniquer::class,
+			'sequence' => SixtyEightPublishers\DoctrineSluggable\Uniquer\SequenceUniquer::class,
+		],
+		'transliterator' => [
+			'default' => SixtyEightPublishers\DoctrineSluggable\Transliterator\DefaultTransliterator::class,
+			'camel-case' => SixtyEightPublishers\DoctrineSluggable\Transliterator\CamelCaseTransliterator::class,
+		],
+	];
+
 	/** @var array  */
 	private $values;
 
@@ -83,8 +105,9 @@ final class Slug
 	{
 		$class = $defaultClass;
 
-		if (isset($values[$name])) {
+		if (array_key_exists($name, $values)) {
 			$class = $values[$name];
+			$class = self::ALIASES[$name][$class] ?? $class;
 
 			$this->assertSubclass($class, $parentClass);
 		}
