@@ -50,5 +50,8 @@ final class CheckOnlyStrategy extends SixtyEightPublishers\DoctrineSluggable\Abs
 		if (!$definition->getUniquer()->isUnique($slug, $adapter, $definition->getFinder())) {
 			throw new SixtyEightPublishers\DoctrineSluggable\Exception\UniqueSlugException($slug, $adapter->getEntity(), $fieldName);
 		}
+
+		# add slug between persisted
+		$definition->getFinder()->addPersistedSlug($adapter, $fieldName, $slug);
 	}
 }
