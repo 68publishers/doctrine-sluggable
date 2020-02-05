@@ -96,7 +96,7 @@ final class EntityAdapter implements IEntityAdapter
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getIdentifier(bool $single = true)
+	public function getIdentifier(bool $single = TRUE)
 	{
 		if (NULL === $this->identifier) {
 			$this->resolveIdentifier();
