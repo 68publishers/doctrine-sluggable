@@ -15,7 +15,8 @@
 		"behat/transliterator": "^1.2"
 	},
 	"require-dev": {
-		"friendsofphp/php-cs-fixer": "^2.0",
+		"roave/security-advisories": "dev-latest",
+		"friendsofphp/php-cs-fixer": "^2.19",
 		"nette/tester": "^1.7",
 		"mockery/mockery": "^1.2",
 		"nette/di": "^2.4"
@@ -24,11 +25,13 @@
 		"nette/di": "For integration into Nette Framework"
 	},
 	"autoload": {
-		"classmap": ["src/"],
-		"files": []
+		"psr-4": {
+			"SixtyEightPublishers\\DoctrineSluggable\\": "src/"
+		}
 	},
 	"autoload-dev": {
-		"classmap": ["tests/"],
-		"files": []
+		"psr-4": {
+			"SixtyEightPublishers\\DoctrineSluggable\\Tests\\": "tests/"
+		}
 	}
 }
