@@ -81,7 +81,13 @@ final class EntityAdapter implements IEntityAdapter
 	{
 		$this->loadProxy();
 
-		return $this->getClassMetadata()->getReflectionProperty($fieldName)->getValue($this->entity);
+		$property = $this->getClassMetadata()->getReflectionProperty($fieldName);
+
+		if (PHP_VERSION_ID < 70400 || $property->isInitialized($this->entity)) {
+			return $property->getValue($this->entity);
+		}
+
+		return NULL;
 	}
 
 	/**
