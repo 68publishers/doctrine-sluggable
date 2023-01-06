@@ -27,6 +27,7 @@ final class AnnotationSluggableDefinitionStorage implements ISluggableDefinition
 	 * {@inheritDoc}
 	 *
 	 * @throws Doctrine\ORM\Mapping\MappingException
+	 * @throws \Psr\Cache\InvalidArgumentException
 	 * @throws \ReflectionException
 	 */
 	public function findSluggableDefinitions(Doctrine\ORM\EntityManagerInterface $em, string $entityClassName): array
@@ -38,19 +39,19 @@ final class AnnotationSluggableDefinitionStorage implements ISluggableDefinition
 			return $this->definitionStorage[$name];
 		}
 
-		/** @var \Doctrine\Common\Cache\Cache|NULL $cache */
-		$cache = $em->getMetadataFactory()->getCacheDriver();
+		$cache = $em->getConfiguration()->getMetadataCache();
+		$cacheItem = $cache ? $cache->getItem($name) : NULL;
 
-		if (NULL !== $cache && $cache->contains($name)) {
-			return $this->definitionStorage[$name] = unserialize($cache->fetch($name), [
+		if (NULL !== $cacheItem && $cacheItem->isHit()) {
+			return $this->definitionStorage[$name] = unserialize($cacheItem->get(), [
 				'allowed_classes' => TRUE,
 			]);
 		}
 
 		$this->definitionStorage[$name] = $this->createSluggableDefinitions($metadata);
 
-		if (NULL !== $cache) {
-			$cache->save($name, serialize($this->definitionStorage[$name]));
+		if (NULL !== $cacheItem) {
+			$cacheItem->set(serialize($this->definitionStorage[$name]));
 		}
 
 		return $this->definitionStorage[$name];
@@ -61,6 +62,7 @@ final class AnnotationSluggableDefinitionStorage implements ISluggableDefinition
 	 *
 	 * @throws Doctrine\ORM\Mapping\MappingException
 	 * @throws \ReflectionException
+	 * @throws \Psr\Cache\InvalidArgumentException
 	 */
 	public function getSluggableDefinition(Doctrine\ORM\EntityManagerInterface $em, string $entityClassName, string $fieldName): SixtyEightPublishers\DoctrineSluggable\Definition\SluggableDefinition
 	{

@@ -11,7 +11,7 @@
 	],
 	"require": {
 		"php": "^7.1 || ^8.1",
-		"doctrine/orm": "^2.7",
+		"doctrine/orm": "^2.11",
 		"behat/transliterator": "^1.2"
 	},
 	"require-dev": {
