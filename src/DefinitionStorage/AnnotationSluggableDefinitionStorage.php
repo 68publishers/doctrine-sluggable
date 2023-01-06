@@ -33,7 +33,7 @@ final class AnnotationSluggableDefinitionStorage implements ISluggableDefinition
 	public function findSluggableDefinitions(Doctrine\ORM\EntityManagerInterface $em, string $entityClassName): array
 	{
 		$metadata = $em->getClassMetadata($entityClassName);
-		$name = $metadata->getName() . '_sluggable_field';
+		$name = str_replace('\\', '_', $metadata->getName() . '_sluggable_field');
 
 		if (isset($this->definitionStorage[$name])) {
 			return $this->definitionStorage[$name];
